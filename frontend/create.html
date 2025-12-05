@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Create Avatar</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Create Your Avatar</h1>
+      <p>Provide an image, persona prompt / knowledge and language. After creation you'll be redirected to the main session page.</p>
+    </div>
+
+    <div class="form-panel">
+      <div class="form-grid">
+        <div class="form-row">
+          <label for="avatarImage">Avatar Image</label>
+          <input type="file" id="avatarImage" accept="image/*" />
+        </div>
+
+        <div class="form-row">
+          <label for="personaPrompt">Persona Prompt / Knowledge</label>
+          <textarea id="personaPrompt" rows="6" placeholder="Describe the avatar persona, instructions and knowledge..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <label for="languageSelect">Language</label>
+          <select id="languageSelect">
+            <option value="en">English</option>
+            <option value="es">Spanish</option>
+            <option value="hi">Hindi</option>
+            <option value="ja">Japanese</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button id="createBtn" class="btn btn-primary primary-small">Create Avatar</button>
+        <a href="index.html" class="btn">Back</a>
+      </div>
+
+      <div id="createStatus"></div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="create.js"></script>
+</body>
+</html>

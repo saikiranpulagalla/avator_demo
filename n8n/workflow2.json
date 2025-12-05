@@ -1,0 +1,308 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "avatar-transcript",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook - Receive Transcript",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        192,
+        -128
+      ],
+      "webhookId": "avatar-transcript-webhook",
+      "id": "e3a4230b-365b-44d4-9b46-5b8984a64249"
+    },
+    {
+      "parameters": {
+        "functionCode": "const webhookData = $input.item.json;\nconst transcript = webhookData.transcript || [];\nconst sessionId = webhookData.session_id || 'unknown';\n\nlet fullConversation = '';\nif (Array.isArray(transcript)) {\n  fullConversation = transcript.map(entry => {\n    const speaker = entry.role || 'User';\n    const text = entry.content || entry.text || '';\n    return `${speaker}: ${text}`;\n  }).join('\\n');\n} else if (typeof transcript === 'string') {\n  fullConversation = transcript;\n}\n\nconst startTime = webhookData.started_at ? new Date(webhookData.started_at) : new Date();\nconst endTime = webhookData.ended_at ? new Date(webhookData.ended_at) : new Date();\nconst durationMs = endTime - startTime;\nconst durationMinutes = Math.max(1, Math.ceil(durationMs / 60000));\n\nreturn { \n  json: { \n    sessionId: sessionId, \n    fullConversation: fullConversation, \n    durationMs: durationMs, \n    durationMinutes: durationMinutes, \n    startTime: startTime.toISOString(), \n    endTime: endTime.toISOString(), \n    rawWebhookData: webhookData \n  } \n};"
+      },
+      "name": "Clean & Format Transcript",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -128
+      ],
+      "id": "e56a13cf-fdb4-4f17-9a8c-a26195c7e1d5"
+    },
+    {
+      "parameters": {
+        "functionCode": "const llmResponse = $input.item.json;\nconst responseText = llmResponse.candidates?.[0]?.content?.parts?.[0]?.text || '';\n\nlet extractedData = { \n  name: 'Not provided', \n  phone: 'Not provided', \n  requirement: 'Not provided' \n};\n\ntry {\n  const jsonMatch = responseText.match(/\\{[\\s\\S]*\\}/);\n  if (jsonMatch) { \n    extractedData = JSON.parse(jsonMatch[0]); \n  }\n} catch (error) { \n  console.error('Failed to parse LLM response:', error); \n}\n\nconst sessionData = $('Clean & Format Transcript').item.json;\n\nreturn { \n  json: { \n    ...extractedData, \n    sessionId: sessionData.sessionId, \n    durationMinutes: sessionData.durationMinutes, \n    timestamp: sessionData.endTime \n  } \n};"
+      },
+      "name": "Parse LLM Response",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        992,
+        -128
+      ],
+      "id": "9cfc97d9-fbd4-4ec7-b320-f5b5ae24cf51"
+    },
+    {
+      "parameters": {
+        "functionCode": "const extractedData = $input.item.json;\nconst durationMinutes = extractedData.durationMinutes || 0;\nconst RATE_PER_MINUTE = 0.15;\nconst CREDITS_PER_MINUTE = 1;\nconst totalCost = (durationMinutes * RATE_PER_MINUTE).toFixed(2);\nconst totalCredits = durationMinutes * CREDITS_PER_MINUTE;\n\nreturn { \n  json: { \n    ...extractedData, \n    minutesUsed: durationMinutes, \n    costUSD: totalCost, \n    creditsUsed: totalCredits, \n    reportGenerated: new Date().toISOString() \n  } \n};"
+      },
+      "name": "Calculate Usage & Cost",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        -128
+      ],
+      "id": "1c58fa0c-3573-45c9-b576-6b8848f31a78"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1s0hEpLOOXH9hUGsnbgGVSfoS_8Zm52tOM0CpFKvIztI",
+          "mode": "list",
+          "cachedResultName": "avator",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1s0hEpLOOXH9hUGsnbgGVSfoS_8Zm52tOM0CpFKvIztI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1s0hEpLOOXH9hUGsnbgGVSfoS_8Zm52tOM0CpFKvIztI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Phone",
+              "displayName": "Phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Requirement",
+              "displayName": "Requirement",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Session Id",
+              "displayName": "Session Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Duration Minutes",
+              "displayName": "Duration Minutes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Timestamp",
+              "displayName": "Timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Minutes Used",
+              "displayName": "Minutes Used",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Cost USD",
+              "displayName": "Cost USD",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Credits Used",
+              "displayName": "Credits Used",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Report Generated",
+              "displayName": "Report Generated",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "useAppend": true
+        }
+      },
+      "name": "Save to Google Sheets",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1392,
+        -128
+      ],
+      "id": "cdd21df9-3b96-4fc0-9c7e-2103b5ca7393",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "XIbNeE7HQvfwoMkr",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ \"You are a data extraction assistant. Analyze the following conversation transcript and extract:\\n1. Client name (full name if available)\\n2. Phone number (in international format if possible)\\n3. What the client needs/wants (brief summary)\\n\\nTranscript:\\n\" + $json.fullConversation + \"\\n\\nRespond ONLY with a valid JSON object in this exact format:\\n{\\n  \\\"name\\\": \\\"extracted name or 'Not provided'\\\",\\n  \\\"phone\\\": \\\"extracted phone or 'Not provided'\\\",\\n  \\\"requirement\\\": \\\"brief summary of what they need\\\"\\n}\\n\\nIf information is not found, use \\\"Not provided\\\" as the value.\" }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        640,
+        -128
+      ],
+      "id": "0bc4a02c-7f76-4b6f-9458-2ea89b96a7c6",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        720,
+        48
+      ],
+      "id": "62f2ebee-3935-46cf-ad5c-9bef4f663f33",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "1OSPQlVS85Ips0Yi",
+          "name": "Google Gemini(PaLM) Api account 4"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook - Receive Transcript": {
+      "main": [
+        [
+          {
+            "node": "Clean & Format Transcript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean & Format Transcript": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse LLM Response": {
+      "main": [
+        [
+          {
+            "node": "Calculate Usage & Cost",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Usage & Cost": {
+      "main": [
+        [
+          {
+            "node": "Save to Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save to Google Sheets": {
+      "main": [
+        []
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Parse LLM Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "601122d56de9a2344d662bd9ef2a1f6654dd20da3c1623492dc5bc94238ead91"
+  }
+}

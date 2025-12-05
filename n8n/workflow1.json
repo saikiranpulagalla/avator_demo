@@ -1,0 +1,284 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "create-avatar-session",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "1. Webhook - Receive Image & Prompt",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -784,
+        -512
+      ],
+      "id": "e56203f1-1ac2-465c-975d-5cd5582c6487",
+      "webhookId": "0b620553-8f29-4e4e-a2e4-8536cd1265b2"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the incoming data from webhook\nconst incomingData = $input.item.json;\n\n// Extract image and parameters from the request body\nlet imageBase64 = incomingData.body.image_base64;\nconst personaPrompt = incomingData.body.persona_prompt || 'hello';\nconst language = incomingData.body.language || 'en';\n\n// Remove data URL prefix if present (e.g., \"data:image/jpeg;base64,\")\nif (imageBase64 && imageBase64.includes(',')) {\n  imageBase64 = imageBase64.split(',')[1];\n}\n\n// Convert base64 string to Buffer\nconst imageBuffer = Buffer.from(imageBase64, 'base64');\n\n// Return data with binary image\nreturn {\n  json: {\n    persona_prompt: personaPrompt,\n    language: language\n  },\n  binary: {\n    data: {\n      data: imageBuffer,\n      mimeType: 'image/jpeg',\n      fileName: 'avatar.jpg'\n    }\n  }\n};"
+      },
+      "name": "2. Extract Image Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        -512
+      ],
+      "id": "extract-image-data"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.liveavatar.com/v1/assets/upload",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "3. Upload Avatar Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -400,
+        -512
+      ],
+      "id": "e250d51e-8549-4f4c-89f8-5a33d8a9edcb",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "qcdrB8NSRbTq1vSu",
+          "name": "Header Auth account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.liveavatar.com/v1/sessions/token",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  \"mode\": \"FULL\",\n  \"avatar_id\": $json.avatar_id,\n  \"avatar_persona\": {\n    \"voice_id\": null,\n    \"language\": $('2. Extract Image Data').item.json.language,\n    \"prompt\": $('2. Extract Image Data').item.json.persona_prompt\n  }\n} }}",
+        "options": {}
+      },
+      "name": "4. Create Session Token",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -192,
+        -512
+      ],
+      "id": "d67bf243-263f-4045-9fb2-d5714aa0c1a2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "qcdrB8NSRbTq1vSu",
+          "name": "Header Auth account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.liveavatar.com/v1/sessions/start",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.session_token }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "5. Start Session",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        128,
+        -512
+      ],
+      "id": "ba07234f-05ce-4aab-a6b6-2d4a9344ba8a",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "qcdrB8NSRbTq1vSu",
+          "name": "Header Auth account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const upload = $('3. Upload Avatar Image').item.json;\nconst token = $('4. Create Session Token').item.json;\nconst start = $('5. Start Session').item.json;\nconst extracted = $('2. Extract Image Data').item.json;\n\nreturn {\n  json: {\n    session_id: token.session_id,\n    session_token: token.session_token,\n    livekit_url: start.livekit_url,\n    livekit_token: start.room_token,\n    identity: start.identity,\n    avatar_id: upload.avatar_id,\n    language: extracted.language,\n    persona_prompt: extracted.persona_prompt\n  }\n};"
+      },
+      "name": "6. Format Final Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        416,
+        -512
+      ],
+      "id": "f1fb2a71-fbf5-4cd9-bfce-93cf019113e5"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      },
+      "name": "7. Return Success",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        -512
+      ],
+      "id": "fde1f6c4-5376-4e78-8c5d-e1214c3679cf"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"error\": true, \"message\": \"Failed to create session\", \"details\": $json.execution && $json.execution.error ? $json.execution.error.message : \"Unknown error\" } }}",
+        "options": {
+          "responseCode": "=400"
+        }
+      },
+      "name": "8. Return Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        720,
+        -368
+      ],
+      "id": "3d78006f-1e67-475e-a932-d9b1f3c3c883"
+    },
+    {
+      "parameters": {},
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        416,
+        -320
+      ],
+      "id": "c262dc2c-60cc-4457-a02c-53facde9a089"
+    }
+  ],
+  "connections": {
+    "1. Webhook - Receive Image & Prompt": {
+      "main": [
+        [
+          {
+            "node": "2. Extract Image Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "2. Extract Image Data": {
+      "main": [
+        [
+          {
+            "node": "3. Upload Avatar Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "3. Upload Avatar Image": {
+      "main": [
+        [
+          {
+            "node": "4. Create Session Token",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "4. Create Session Token": {
+      "main": [
+        [
+          {
+            "node": "5. Start Session",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "5. Start Session": {
+      "main": [
+        [
+          {
+            "node": "6. Format Final Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "6. Format Final Response": {
+      "main": [
+        [
+          {
+            "node": "7. Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "8. Return Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "601122d56de9a2344d662bd9ef2a1f6654dd20da3c1623492dc5bc94238ead91"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "name": "avatar-demo",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start:web": "python -m http.server 5173 --directory frontend",
+    "start:webhook": "node scripts/validate-webhook.js",
+    "test:heygen": "node scripts/test-heygen.js",
+    "start:ws-proxy": "node scripts/ws-proxy.js"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "dependencies": {
+    "ws": "^8.18.3"
+  }
+}

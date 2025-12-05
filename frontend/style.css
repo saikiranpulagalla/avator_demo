@@ -1,0 +1,406 @@
+/* CSS Styling */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.container {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    max-width: 900px;
+    width: 100%;
+    overflow: hidden;
+    animation: slideUp 0.5s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 30px;
+    text-align: center;
+    color: white;
+}
+
+.header h1 {
+    font-size: 2em;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.header p {
+    opacity: 0.9;
+    font-size: 1.1em;
+    margin-bottom: 15px;
+}
+
+.session-info {
+    margin-top: 15px;
+}
+
+.info-badge {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    display: inline-block;
+    backdrop-filter: blur(10px);
+}
+
+.video-container {
+    position: relative;
+    background: #000;
+    aspect-ratio: 16/9;
+    overflow: hidden;
+}
+
+#remoteVideo {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: white;
+    z-index: 10;
+    transition: opacity 0.3s;
+}
+
+.video-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.pulse-loader {
+    width: 60px;
+    height: 60px;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.controls {
+    padding: 30px;
+    display: flex;
+    gap: 15px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 12px 30px;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+    background: #667eea;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #5568d3;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-danger {
+    background: #f56565;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #e53e3e;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(245, 101, 101, 0.4);
+}
+
+.btn-danger:active {
+    transform: translateY(0);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.status {
+    padding: 20px;
+    text-align: center;
+    background: #f7fafc;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: background 0.3s;
+}
+
+.status-indicator {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #48bb78;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.1);
+    }
+}
+
+.status.connecting {
+    background: #fef5e7;
+}
+
+.status.connecting .status-indicator {
+    background: #ed8936;
+}
+
+.status.connected {
+    background: #e6ffed;
+}
+
+.status.connected .status-indicator {
+    background: #48bb78;
+}
+
+.status.error {
+    background: #fff5f5;
+}
+
+.status.error .status-indicator {
+    background: #f56565;
+}
+
+#statusText {
+    font-weight: 500;
+    font-size: 0.95em;
+}
+
+.info-panel {
+    padding: 25px 30px;
+    background: #f8f9fa;
+    border-top: 1px solid #e2e8f0;
+}
+
+.info-panel h3 {
+    font-size: 1.1em;
+    margin-bottom: 15px;
+    color: #2d3748;
+}
+
+.info-panel ul {
+    list-style: none;
+    padding-left: 0;
+}
+
+.info-panel li {
+    padding: 8px 0;
+    padding-left: 25px;
+    position: relative;
+    color: #4a5568;
+    font-size: 0.95em;
+}
+
+.info-panel li:before {
+    content: "✓";
+    position: absolute;
+    left: 0;
+    color: #48bb78;
+    font-weight: bold;
+}
+
+@media (max-width: 768px) {
+    .container {
+        border-radius: 0;
+    }
+    
+    .header h1 {
+        font-size: 1.5em;
+    }
+    
+    .controls {
+        padding: 20px;
+    }
+    
+    .btn {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .info-panel {
+        padding: 20px;
+    }
+}
+
+/* Create page form styling */
+.form-panel {
+    padding: 24px 30px 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: #fff;
+}
+
+.form-panel label {
+    font-size: 0.95rem;
+    color: #2d3748;
+    margin-bottom: 6px;
+}
+
+.form-grid {
+    /* stack rows vertically; each row (.form-row) handles its own two-column layout */
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.form-row {
+    /* make each row a two-column grid: fixed label column + flexible control column */
+    display: grid;
+    grid-template-columns: 180px 1fr;
+    gap: 12px 18px;
+    /* align to top so multi-line labels don't vertically center beside tall controls */
+    align-items: start;
+}
+
+input[type="file"] {
+    padding: 6px 8px;
+    width: 100%;
+}
+
+textarea {
+    min-height: 84px;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    font-size: 0.95rem;
+    width: 100%;
+}
+
+select {
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    width: 100%;
+}
+
+#createStatus {
+    font-size: 0.95rem;
+    color: #4a5568;
+    margin-top: 8px;
+}
+
+.form-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-top: 8px;
+}
+
+.btn.primary-small {
+    padding: 10px 18px;
+    border-radius: 999px;
+}
+
+@media (max-width: 900px) {
+    .form-grid {
+        /* keep rows stacked on small screens */
+        gap: 12px;
+    }
+
+    .form-row {
+        /* collapse to a single column so label sits above control on narrow viewports */
+        grid-template-columns: 1fr;
+        align-items: stretch;
+    }
+}
+
+/* Improve label alignment inside grid columns */
+.form-grid label {
+    display: block;
+    /* label sits in left column; no bottom margin needed when inline */
+    margin-bottom: 0;
+    font-weight: 600;
+}
+
+/* Right-align labels in the left column so controls line up flush on the right */
+.form-row > label {
+    justify-self: end;
+    text-align: right;
+    padding-right: 8px;
+}
+
+.form-panel {
+    max-width: 880px;
+}
+
+/* When stacked (mobile), make labels left-aligned and full-width */
+@media (max-width: 900px) {
+    .form-row > label {
+        justify-self: start;
+        text-align: left;
+        padding-right: 0;
+        margin-bottom: 6px;
+    }
+}

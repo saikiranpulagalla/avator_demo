@@ -1,0 +1,64 @@
+LiveAvatar Transcript Processor & Automatic Lead Capture
+n8n Workflow – Fully Automated
+
+This workflow instantly turns every finished LiveAvatar (HeyGen Streaming Avatar) conversation into a structured lead saved directly to Google Sheets.
+
+How it works:
+1. Triggered by a POST webhook when a LiveAvatar session ends
+   Endpoint: your-n8n-domain/webhook/avatar-transcript
+
+2. Receives the full conversation transcript + session metadata
+
+3. Cleans and formats the transcript into a readable conversation log
+   (supports both array and string formats, adds "User:" / "Assistant:" labels)
+
+4. Sends the full conversation to Google Gemini 2.0 Flash with a strict prompt
+   Forces Gemini to respond ONLY with valid JSON containing:
+   → Client full name
+   → phone number
+   → client requirement / what they want
+
+5. Safely extracts the JSON from Gemini's response (even if extra text is added)
+
+6. Calculates actual usage and cost:
+   • Duration rounded up to minutes
+   • Cost: $0.15 per minute
+   • Credits: 1 per minute
+
+7. Appends a new row to Google Sheets with these columns:
+   Name | Phone | Requirement | Session Id | Duration Minutes | Timestamp | Minutes Used | Cost USD | Credits Used | Report Generated
+
+Use Cases:
+– Sales avatars that qualify leads
+– Booking/demo request bots
+– Customer support avatars collecting contact info
+– Language tutors capturing student details
+– Any real-time talking photo that needs automatic lead logging
+
+Example Input (sent to webhook):
+{
+  "session_id": "sess_8f4e2c1a9b",
+  "transcript": [
+    {"role": "user", "content": "Hi, I'm John Doe"},
+    {"role": "user", "content": "My number is +65 9123 4567"},
+    {"role": "user", "content": "I want to schedule a product demo"}
+  ],
+  "started_at": "2025-12-05T10:00:00Z",
+  "ended_at": "2025-12-05T10:07:22Z"
+}
+
+Result:
+New Google Sheets row created instantly:
+John Doe | +65 9123 4567 | Wants to schedule a product demo | sess_8f4e... | 8 | 2025-12-05T10:07:22Z | 8 | 1.20 | 8 | 2025-12-05T10:08:01Z
+
+Setup (2 minutes):
+1. Import this JSON into n8n
+2. Connect your Google Sheets account
+3. Connect your Google Gemini (PaLM) API key
+4. Activate workflow
+5. Call the webhook from your frontend or LiveAvatar on session end
+
+No manual work. Every conversation becomes a clean, cost-tracked lead — automatically.
+
+Tested & working – December 2025
+Perfect for sales, support, bookings, and lead-gen avatars

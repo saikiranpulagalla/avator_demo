@@ -1,0 +1,38 @@
+LiveAvatar – Instant Talking Avatar Session Creator (One-Click API Endpoint)
+
+This workflow provides a complete serverless endpoint to create a fully interactive LiveAvatar (HeyGen Streaming Avatar) session from a single HTTP POST request.
+
+How it works:
+1. Receives a base64-encoded portrait image + optional persona prompt & language via webhook
+2. Converts the base64 string into a proper binary image file
+3. Uploads the image to LiveAvatar → receives a permanent avatar_id
+4. Creates a new interactive session token with the chosen persona (system prompt) and language
+5. Starts the real-time session (WebRTC/LiveKit)
+6. Returns all data the frontend needs to instantly connect and talk to the avatar
+
+Request format (POST to your webhook URL):
+{
+  "image_base64": "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQE...",   // or without data: prefix
+  "persona_prompt": "You are a friendly customer support agent...",   // optional, default: "hello"
+  "language": "en"                                                    // optional, default: en
+}
+
+Successful response example:
+{
+  "session_id": "sess_xxx",
+  "session_token": "eyJhbGciOi...",
+  "livekit_url": "wss://livekit.liveavatar.com",
+  "livekit_token": "eyJhbGciOi...",
+  "identity": "user_67b4c9a2",
+  "avatar_id": "avatar_67b4c9a2",
+  "language": "en",
+  "persona_prompt": "You are a friendly customer support agent..."
+}
+
+Use case:
+Perfect for AI assistants, virtual receptionists, language tutors, sales avatars, or any real-time talking photo application.
+
+Authentication:
+All LiveAvatar requests use a single Header Auth credential (X-API-KEY) – keep it safe and never expose it client-side.
+
+Built and tested with LiveAvatar API (December 2025)

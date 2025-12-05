@@ -1,0 +1,16 @@
+# Node and Python artifacts
+node_modules/
+__pycache__/
+
+# Local environment file (secrets)
+.env
+
+# OS files
+.DS_Store
+Thumbs.db
+ 
+# Local frontend override (developer-specific)
+frontend/config.local.js
+
+# npm lock
+package-lock.json
